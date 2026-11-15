@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html class="light, scroll-smooth" lang="id">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>PepsFood | Dimsum Premium & Food Delivery</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind Config -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e63946",
+                        "primary-dark": "#c1121f",
+                        "background-light": "#fdfbf7",
+                        "background-dark": "#1d1616",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Custom Styles & Animations -->
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+        }
+        .material-symbols-outlined { 
+            vertical-align: middle; 
+        }
+
+        /* Keyframes untuk Animasi Bounce Keranjang Melayang */
+        @keyframes cartPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.3) rotate(-8deg); }
+            70% { transform: scale(0.9) rotate(4deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .animate-cart-pop {
+            animation: cartPop 0.5s ease-in-out;
+        }
+
+        /* Keyframes untuk Animasi Badge Keranjang */
+        @keyframes badgePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); background-color: #f59e0b; }
+            100% { transform: scale(1); }
+        }
+
+        .animate-badge-pulse {
+            animation: badgePulse 0.4s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-[#181211] dark:text-white transition-colors duration-300">
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed top-20 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+        
+        <!-- ==================== HEADER/NAVBAR ==================== -->
+        <header class="fixed top-0 z-40 w-full bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-solid border-[#f5eef0] dark:border-[#3d2a26] px-4 lg:px-20 py-3">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <!-- Logo -->
+                <a href="#" class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-9 h-9 text-primary flex items-center justify-center bg-primary/10 rounded-full">
+                        <span class="material-symbols-outlined text-2xl">ramen_dining</span>
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-extrabold tracking-tight">PepsFood <span class="text-primary text-xs sm:text-sm font-semibold">Dimsum</span></h2>
+                </a>
+                
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center gap-8">
+                    <a class="text-sm font-semibold hover:text-primary transition-colors" href="#menu">Menu Spesial</a>
+                    <a class="text-sm font-semibold hover:text-primary transition-colors" href="#why-us">Keunggulan</a>
+                    <a class="text-sm font-semibold hover:text-primary transition-colors" href="#location">Lokasi Toko</a>
+                    
+                    <!-- Header Cart Trigger (Desktop) -->
+                    <button id="open-cart-header" class="relative flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-lg text-sm font-bold transition-all">
+                        <span class="material-symbols-outlined text-xl">shopping_bag</span>
+                        <span>Keranjang</span>
+                        <span id="header-cart-count" class="bg-primary text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+                </nav>
+
+                <!-- Mobile Header Right Controls -->
+                <div class="flex items-center gap-2 md:hidden">
+                    <!-- Cart Button (Mobile Header) -->
+                    <button id="open-cart-mobile" class="relative flex items-center justify-center bg-primary/10 text-primary w-10 h-10 rounded-xl font-bold">
+                        <span class="material-symbols-outlined text-xl">shopping_bag</span>
+                        <span id="mobile-cart-count" class="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-extrabold">0</span>
+                    </button>
+
+                    <!-- Tombol Titik Tiga / Menu Hamburger (Mobile) -->
+            <button id="mobile-menu-btn" aria-label="Buka menu" aria-expanded="false" aria-controls="mobile-dropdown"
+                    class="relative w-10 h-10 flex items-center justify-center rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                <div class="flex flex-col items-end justify-center gap-[5px]">
+                    <span class="hb-line hb-top block h-0.5 w-5 bg-primary rounded-full"></span>
+                    <span class="hb-line hb-mid block h-0.5 w-3.5 bg-primary rounded-full"></span>
+                    <span class="hb-line hb-bot block h-0.5 w-5 bg-primary rounded-full"></span>
+                </div>
+            </button>
+                </div>
+            </div>
+
+            <!-- Dropdown Menu Mobile (Muncul saat Titik Tiga Diklik) -->
+            <div id="mobile-dropdown" class="hidden md:hidden pt-4 pb-3 border-t border-gray-100 dark:border-[#3d2a26] mt-3">
+                <div class="flex flex-col space-y-3 px-2">
+                    <a class="mobile-nav-link text-sm font-semibold p-2.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-3" href="#menu">
+                        <span class="material-symbols-outlined text-primary text-lg">restaurant_menu</span> Menu Spesial
+                    </a>
+                    <a class="mobile-nav-link text-sm font-semibold p-2.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-3" href="#why-us">
+                        <span class="material-symbols-outlined text-primary text-lg">verified</span> Keunggulan Kami
+                    </a>
+                    <a class="mobile-nav-link text-sm font-semibold p-2.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-3" href="#location">
+                        <span class="material-symbols-outlined text-primary text-lg">location_on</span> Lokasi Toko
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==================== MAIN CONTENT ==================== -->
+        <main class="flex-1 pt-20">
+            
+            <!-- ---------- HERO SECTION ---------- -->
+            <section class="max-w-7xl mx-auto px-6 lg:px-20 py-12 lg:py-20">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    
+                    <!-- Hero Content -->
+                    <div class="flex flex-col gap-6 order-2 lg:order-1">
+                        <div class="space-y-4">
+                            <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest rounded-full">
+                                Dimsum Kukus, Goreng & Minuman Segar
+                            </span>
+                            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+                                Kelezatan Dimsum Autentik, <span class="text-primary">Langsung ke Rumahmu</span>
+                            </h1>
+                            <p class="text-base sm:text-lg text-[#7c635e] dark:text-[#c4b5b2] max-w-lg leading-relaxed">
+                                Nikmati kelembutan Hakau, Siomay juicy, dan kesegaran minuman penutup. Pilih menu favoritmu dan pesan via WhatsApp!
+                            </p>
+                        </div>
+                        
+                        <!-- CTA Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a href="#menu" class="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-xl text-base font-bold shadow-xl shadow-primary/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                                <span class="material-symbols-outlined">restaurant_menu</span>
+                                Pilih Menu Hidangan
+                            </a>
+                            <button id="hero-cart-btn" class="flex items-center justify-center gap-2 bg-white dark:bg-[#3d2a26] border border-[#e6dddb] dark:border-[#4d3a36] px-8 py-4 rounded-xl text-base font-bold hover:bg-[#f8f1f0] dark:hover:bg-[#4a342f] transition-all">
+                                <span class="material-symbols-outlined text-primary">shopping_cart</span>
+                                Lihat Keranjang
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Hero Image -->
+                    <div class="order-1 lg:order-2">
+                        <div class="relative w-full max-w-md mx-auto aspect-square">
+                            <div class="absolute inset-0 bg-primary/10 rounded-full blur-3xl"></div>
+                            <div class="relative w-full h-full rounded-3xl bg-center bg-cover shadow-2xl overflow-hidden border-4 border-white dark:border-[#3d2a26]" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=800&q=80');">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- GABUNGAN MENU SECTION (MAKANAN & MINUMAN) ---------- -->
+            <section class="bg-white dark:bg-background-dark/50 py-20" id="menu">
+                <div class="max-w-7xl mx-auto px-6 lg:px-20">
+                    
+                    <!-- Section Header -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+                        <div class="space-y-2">
+                            <span class="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">Menu Pilihan PepsFood</span>
+                            <h2 class="text-3xl lg:text-4xl font-extrabold tracking-tight">Daftar Makanan & Minuman</h2>
+                            <p class="text-[#8a6760] dark:text-[#c4b5b2]">Disajikan segar setiap hari khusus untuk memanjakan lidah Anda</p>
+                        </div>
+
+                        <!-- Filter Tab Kategori -->
+                        <div class="flex items-center gap-2 bg-background-light dark:bg-[#2d1b18] p-1.5 rounded-2xl border border-[#f0e8e6] dark:border-[#3d2a26]">
+
+                            <button class="menu-tab text-gray-600 dark:text-gray-300 font-bold text-xs sm:text-sm px-4 py-2 rounded-xl hover:text-primary transition-all" data-filter="food">
+                                🥟 Makanan (Dimsum)
+                            </button>
+                            <button class="menu-tab text-gray-600 dark:text-gray-300 font-bold text-xs sm:text-sm px-4 py-2 rounded-xl hover:text-primary transition-all" data-filter="drink">
+                                🍹 Minuman Segar
+                            </button>
+                            <button class="menu-tab text-gray-600 dark:text-gray-300 font-bold text-xs sm:text-sm px-4 py-2 rounded-xl hover:text-primary transition-all" data-filter="all">
+                                🔄 Semua Menu
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Unified Menu Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" id="menu-grid">
+                        
+                        <!-- ==================== KATEGORI: MAKANAN ==================== -->
+
+                        <!-- Card 1: Siomay Ayam Udang -->
+                        <div class="menu-item menu-food group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Makanan</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Siomay Ayam Udang</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 22.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Siomay lembut isi olahan daging ayam dan udang segar ( Isi 4 pcs ).
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="dimsum-1"
+                                        data-name="Siomay Ayam Udang"
+                                        data-price="22000"
+                                        data-image="https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Hakau Udang Transparan -->
+                        <div class="menu-item menu-food group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Makanan</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Hakau Udang</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 25.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Kulit transparan lembut dengan isian utuh udang manis gurih ( Isi 4 pcs ).
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="dimsum-2"
+                                        data-name="Hakau Udang"
+                                        data-price="25000"
+                                        data-image="https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Lumpia Kulit Tahu -->
+                        <div class="menu-item menu-food group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Makanan</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Lumpia Kulit Tahu</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 23.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Lumpia goreng renyah isi adonan daging dan sayuran gurih ( Isi 3 pcs ).
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="dimsum-3"
+                                        data-name="Lumpia Kulit Tahu"
+                                        data-price="23000"
+                                        data-image="https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Bakpao Telur Asin -->
+                        <div class="menu-item menu-food group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Makanan</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Bakpao Telur Asin</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 20.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Bakpao kukus lembut dengan isian melted salted egg yang manis dan gurih ( Isi 3 pcs ).
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="dimsum-4"
+                                        data-name="Bakpao Telur Asin"
+                                        data-price="20000"
+                                        data-image="https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card 5: Pangsit Goreng Mayones -->
+                        <div class="menu-item menu-food group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Makanan</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Pangsit Goreng Mayones</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 22.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Pangsit renyah isi ayam disajikan dengan saus mayones creamy ( Isi 4 pcs ).
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="dimsum-5"
+                                        data-name="Pangsit Goreng Mayones"
+                                        data-price="22000"
+                                        data-image="https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card 6: Xiao Long Bao -->
+                        <div class="menu-item menu-food group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Makanan</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Xiao Long Bao</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 28.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Dimsum sup khas dengan kuah gurih beraroma di dalam balutan kulit halus ( Isi 4 pcs ).
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="dimsum-6"
+                                        data-name="Xiao Long Bao"
+                                        data-price="28000"
+                                        data-image="https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ==================== KATEGORI: MINUMAN ==================== -->
+
+                        <!-- Drink Card 1: Es Teh Tarik -->
+                        <div class="menu-item menu-drink group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-amber-500/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Minuman</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Es Teh Tarik</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 12.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Teh beraroma manis pahit dipadu susu kental manis dingin menyegarkan.
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="drink-1"
+                                        data-name="Es Teh Tarik"
+                                        data-price="12000"
+                                        data-image="https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Drink Card 2: Es Lemon Tea -->
+                        <div class="menu-item menu-drink group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-amber-500/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Minuman</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Es Lemon Tea</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 10.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Penyegar asam manis teh asli perasan lemon segar pilihan.
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="drink-2"
+                                        data-name="Es Lemon Tea"
+                                        data-price="10000"
+                                        data-image="https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Drink Card 3: Milk Tea Boba -->
+                        <div class="menu-item menu-drink group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-amber-500/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Minuman</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Milk Tea Boba</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 15.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Teh susu beraroma khas dengan topping boba kenyal manis yang nikmat.
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="drink-3"
+                                        data-name="Milk Tea Boba"
+                                        data-price="15000"
+                                        data-image="https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Drink Card 4: Es Jeruk Segar -->
+                        <div class="menu-item menu-drink group bg-background-light dark:bg-[#2d1b18] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-[#f0e8e6] dark:border-[#3d2a26]">
+                            <div class="aspect-[4/3] bg-center bg-cover transition-transform duration-500 group-hover:scale-105 relative" 
+                                 style="background-image: url('https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80');">
+                                <span class="absolute top-3 left-3 bg-amber-500/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">Minuman</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-bold">Es Jeruk Segar</h3>
+                                    <span class="text-primary font-extrabold text-lg">Rp 10.000</span>
+                                </div>
+                                <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                    Perasan jeruk peras alami tinggi vitamin C kaya rasa dan kesegaran.
+                                </p>
+                                <button class="add-to-cart w-full bg-primary/10 group-hover:bg-primary group-hover:text-white text-primary font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                        data-id="drink-4"
+                                        data-name="Es Jeruk Segar"
+                                        data-price="10000"
+                                        data-image="https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=200&q=80">
+                                    <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span> 
+                                    Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- WHY CHOOSE US SECTION (KEUNGGULAN) ---------- -->
+            <section class="py-20 max-w-7xl mx-auto px-6 lg:px-20 border-t border-[#f0e8e6] dark:border-[#3d2a26]" id="why-us">
+                <div class="text-center mb-16 space-y-4">
+                    <span class="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">Keunggulan PeepsFood</span>
+                    <h2 class="text-3xl lg:text-4xl font-extrabold tracking-tight">Mengapa Memilih Kami?</h2>
+                    <p class="text-[#8a6760] dark:text-[#c4b5b2] max-w-2xl mx-auto">
+                        Kami menjamin kualitas dimsum hangat terbaik langsung disajikan dari klakat kukusan ke meja Anda.
+                    </p>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Feature 1 -->
+                    <div class="bg-white dark:bg-[#2d1b18] p-8 rounded-3xl border border-[#e6dddb] dark:border-[#4d3a36] flex flex-col items-center text-center gap-6 group hover:border-primary transition-colors shadow-sm hover:shadow-md">
+                        <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-4xl">set_meal</span>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-xl font-bold">100% Bahan Segar</h3>
+                            <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2]">Olahan daging segar tanpa pengawet buatan untuk menjaga rasa alami.</p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="bg-white dark:bg-[#2d1b18] p-8 rounded-3xl border border-[#e6dddb] dark:border-[#4d3a36] flex flex-col items-center text-center gap-6 group hover:border-primary transition-colors shadow-sm hover:shadow-md">
+                        <div class="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-4xl">electric_moped</span>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-xl font-bold">Pengiriman Cepat</h3>
+                            <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2]">Dimsum tetap hangat saat sampai di tujuan pemesanan Anda.</p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="bg-white dark:bg-[#2d1b18] p-8 rounded-3xl border border-[#e6dddb] dark:border-[#4d3a36] flex flex-col items-center text-center gap-6 group hover:border-primary transition-colors shadow-sm hover:shadow-md">
+                        <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-4xl">sell</span>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-xl font-bold">Harga Terjangkau</h3>
+                            <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2]">Kualitas restoran bintang lima dengan harga bersahabat di kantong.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- LOCATION SECTION ---------- -->
+            <section class="bg-white dark:bg-[#2d1b18] py-20 border-t border-[#f0e8e6] dark:border-[#3d2a26]" id="location">
+                <div class="max-w-7xl mx-auto px-6 lg:px-20">
+                    <div class="text-center mb-12 space-y-3">
+                        <span class="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">Kunjungi Toko Kami</span>
+                        <h2 class="text-3xl lg:text-4xl font-extrabold tracking-tight">Lokasi Toko & Outlet</h2>
+                        <p class="text-[#8a6760] dark:text-[#c4b5b2]">Siap melayani take away & pesan antar langsung dari dapur utama</p>
+                    </div>
+
+                    <div class="grid lg:grid-cols-2 gap-10 items-center">
+                        <!-- Location Info Card -->
+                        <div class="space-y-6 bg-background-light dark:bg-background-dark/60 p-8 rounded-3xl border border-[#e6dddb] dark:border-[#4d3a36]">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                    <span class="material-symbols-outlined text-2xl">location_on</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold mb-1">PeepsFood</h3>
+                                    <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2] leading-relaxed">
+                                        Jl. Merdeka, Sugihan, Solokuro, Lamongan 62265
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4 pt-4 border-t border-[#e6dddb] dark:border-[#3d2a26]">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                                    <span class="material-symbols-outlined text-2xl">schedule</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold mb-1">Jam Operasional</h3>
+                                    <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2]">
+                                        Senin - Minggu: <span class="font-bold text-gray-900 dark:text-white">10.00 - 22.00 WIB</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4 pt-4 border-t border-[#e6dddb] dark:border-[#3d2a26]">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                                    <span class="material-symbols-outlined text-2xl">call</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold mb-1">Layanan Pelanggan</h3>
+                                    <p class="text-sm text-[#8a6760] dark:text-[#c4b5b2]">
+                                        WhatsApp: <span class="font-bold text-gray-900 dark:text-white">+62 851-5775-6604</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                     
+                        </div>
+
+                        <!-- Interactive Map Frame -->
+                        <div class="h-96 w-full rounded-3xl overflow-hidden border-4 border-white dark:border-[#3d2a26] shadow-xl relative bg-slate-200">
+                            <iframe 
+                                title="Lokasi PepsFood"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.8013830496548!2d112.32526387585854!3d-6.914334993085241!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e77eb15d921606f%3A0x53c33d66187ce9d4!2sToko%20Bismillah%20Sugihan!5e0!3m2!1sid!2sid!4v1790844630461!5m2!1sid!2sid" 
+                                class="w-full h-full border-0" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- FOOTER SECTION ---------- -->
+            <footer class="bg-background-light dark:bg-background-dark pt-16 pb-12 border-t border-[#e6dddb] dark:border-[#3d2a26]">
+                <div class="max-w-7xl mx-auto px-6 lg:px-20 text-center">
+                    <p class="text-xs text-[#8a6760] dark:text-[#c4b5b2]">© 2026 PeepsFood Delivery. All rights reserved.</p>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- ==================== STICKY FLOATING CART BUTTON ==================== -->
+    <button id="floating-cart-btn" class="fixed bottom-6 right-6 z-40 bg-primary hover:bg-primary-dark text-white p-4 rounded-full shadow-2xl transition-transform flex items-center justify-center">
+        <span class="material-symbols-outlined text-3xl">shopping_cart</span>
+        <span id="floating-cart-badge" class="absolute -top-2 -right-2 bg-amber-500 text-white text-xs font-extrabold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white dark:border-background-dark shadow-md">0</span>
+    </button>
+
+    <!-- ==================== CART DRAWER SIDEBAR ==================== -->
+    <div id="cart-drawer-backdrop" class="fixed inset-0 bg-black/60 z-50 hidden transition-opacity"></div>
+    <aside id="cart-drawer" class="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-white dark:bg-[#2d1b18] shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <!-- Cart Drawer Header -->
+        <div class="p-6 border-b border-gray-100 dark:border-[#3d2a26] flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary text-2xl">shopping_bag</span>
+                <h3 class="text-xl font-bold">Keranjang Belanja</h3>
+                <span id="cart-total-badge" class="text-xs font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full">0 Item</span>
+            </div>
+            <button id="close-cart-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-white p-1 rounded-lg">
+                <span class="material-symbols-outlined text-2xl">close</span>
+            </button>
+        </div>
+
+        <!-- Cart Items List -->
+        <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+
+        <!-- Cart Drawer Footer -->
+        <div class="p-6 border-t border-gray-100 dark:border-[#3d2a26] bg-gray-50/50 dark:bg-background-dark/30 space-y-4">
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal" class="font-bold text-gray-900 dark:text-white">Rp 0</span>
+                </div>
+                <div class="pt-2 border-t border-gray-200 dark:border-[#3d2a26] flex justify-between text-base font-extrabold text-gray-900 dark:text-white">
+                    <span>Total Bayar</span>
+                    <span id="cart-total-price" class="text-primary text-xl">Rp 0</span>
+                </div>
+            </div>
+
+            <input type="text" id="delivery-note" placeholder="Catatan/Alamat Pengiriman" 
+                   class="w-full text-xs rounded-xl border border-gray-200 dark:border-[#4d3a36] bg-white dark:bg-[#1d1616] px-4 py-2.5 focus:ring-2 focus:ring-primary outline-none">
+
+            <button id="checkout-wa-btn" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 text-base">
+                <span class="material-symbols-outlined">chat</span>
+                Pesan via WhatsApp Sekarang
+            </button>
+        </div>
+    </aside>
+
+    <!-- ==================== SCRIPT JAVASCRIPT ==================== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const phoneNum = "6285157756604"; // Nomor WhatsApp Toko
+
+            let cart = [];
+
+            // Filter Tab Kategori (Semua / Makanan / Minuman)
+            const menuTabs = document.querySelectorAll('.menu-tab');
+            const menuItems = document.querySelectorAll('.menu-item');
+
+            menuTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    menuTabs.forEach(t => {
+                        t.classList.remove('bg-primary', 'text-white');
+                        t.classList.add('text-gray-600', 'dark:text-gray-300');
+                    });
+
+                    tab.classList.add('bg-primary', 'text-white');
+                    tab.classList.remove('text-gray-600', 'dark:text-gray-300');
+
+                    const filter = tab.getAttribute('data-filter');
+
+                    menuItems.forEach(item => {
+                        if (filter === 'all') {
+                            item.classList.remove('hidden');
+                        } else if (filter === 'food') {
+                            item.classList.contains('menu-food') ? item.classList.remove('hidden') : item.classList.add('hidden');
+                        } else if (filter === 'drink') {
+                            item.classList.contains('menu-drink') ? item.classList.remove('hidden') : item.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            // Mobile Menu Controls
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileDropdown = document.getElementById('mobile-dropdown');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+            if (mobileMenuBtn && mobileDropdown) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    mobileDropdown.classList.toggle('hidden');
+                });
+
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileDropdown.classList.add('hidden');
+                    });
+                });
+            }
+
+            // UI Elements Keranjang
+            const cartDrawer = document.getElementById('cart-drawer');
+            const cartBackdrop = document.getElementById('cart-drawer-backdrop');
+            const cartItemsContainer = document.getElementById('cart-items-container');
+            const cartSubtotalEl = document.getElementById('cart-subtotal');
+            const cartTotalPriceEl = document.getElementById('cart-total-price');
+            const cartTotalBadge = document.getElementById('cart-total-badge');
+            const headerCartCount = document.getElementById('header-cart-count');
+            const mobileCartCount = document.getElementById('mobile-cart-count');
+            const floatingCartBadge = document.getElementById('floating-cart-badge');
+            const floatingCartBtn = document.getElementById('floating-cart-btn');
+            const toastContainer = document.getElementById('toast-container');
+            const deliveryNoteInput = document.getElementById('delivery-note');
+
+            const openCartHeader = document.getElementById('open-cart-header');
+            const openCartMobile = document.getElementById('open-cart-mobile');
+            const heroCartBtn = document.getElementById('hero-cart-btn');
+            const closeCartBtn = document.getElementById('close-cart-btn');
+            const checkoutWaBtn = document.getElementById('checkout-wa-btn');
+
+            const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+
+            // Buka & Tutup Drawer Keranjang
+            const openCart = () => {
+                cartDrawer.classList.remove('translate-x-full');
+                cartBackdrop.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeCart = () => {
+                cartDrawer.classList.add('translate-x-full');
+                cartBackdrop.classList.add('hidden');
+                document.body.style.overflow = '';
+            };
+
+            openCartHeader?.addEventListener('click', openCart);
+            openCartMobile?.addEventListener('click', openCart);
+            heroCartBtn?.addEventListener('click', openCart);
+            floatingCartBtn?.addEventListener('click', openCart);
+            closeCartBtn?.addEventListener('click', closeCart);
+            cartBackdrop?.addEventListener('click', closeCart);
+
+            // Function Notifikasi Toast
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'bg-gray-900/90 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/30 flex items-center gap-2 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0';
+                toast.innerHTML = `<span class="material-symbols-outlined text-emerald-400 text-base">check_circle</span> ${message}`;
+                
+                toastContainer.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-2', 'opacity-0');
+                }, 10);
+
+                setTimeout(() => {
+                    toast.classList.add('translate-y-2', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 2500);
+            }
+
+            // Function Animasi Keranjang Melayang
+            function triggerCartAnimation() {
+                floatingCartBtn.classList.remove('animate-cart-pop');
+                floatingCartBadge.classList.remove('animate-badge-pulse');
+
+                void floatingCartBtn.offsetWidth; // Trigger Reflow CSS
+                
+                floatingCartBtn.classList.add('animate-cart-pop');
+                floatingCartBadge.classList.add('animate-badge-pulse');
+            }
+
+            // Event Tambah ke Keranjang
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = button.getAttribute('data-id');
+                    const name = button.getAttribute('data-name');
+                    const price = parseInt(button.getAttribute('data-price'), 10);
+                    const image = button.getAttribute('data-image');
+
+                    const existingIndex = cart.findIndex(item => item.id === id);
+
+                    if (existingIndex > -1) {
+                        cart[existingIndex].qty += 1;
+                    } else {
+                        cart.push({ id, name, price, image, qty: 1 });
+                    }
+
+                    // Update UI & Triggers
+                    updateCartUI();
+                    triggerCartAnimation();
+                    showToast(`<strong>${name}</strong> masuk keranjang!`);
+                });
+            });
+
+            // Update Kuantitas
+            window.changeQty = (id, delta) => {
+                const itemIndex = cart.findIndex(item => item.id === id);
+                if (itemIndex > -1) {
+                    cart[itemIndex].qty += delta;
+                    if (cart[itemIndex].qty <= 0) cart.splice(itemIndex, 1);
+                    updateCartUI();
+                }
+            };
+
+            // Hapus Item
+            window.removeItem = (id) => {
+                cart = cart.filter(item => item.id !== id);
+                updateCartUI();
+            };
+
+            // Render Keranjang
+            function updateCartUI() {
+                const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+                const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+                if (headerCartCount) headerCartCount.textContent = totalItems;
+                if (mobileCartCount) mobileCartCount.textContent = totalItems;
+                floatingCartBadge.textContent = totalItems;
+                cartTotalBadge.textContent = `${totalItems} Item`;
+
+                cartSubtotalEl.textContent = formatRupiah(totalPrice);
+                cartTotalPriceEl.textContent = formatRupiah(totalPrice);
+
+                if (cart.length === 0) {
+                    cartItemsContainer.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center text-gray-400 py-12">
+                            <span class="material-symbols-outlined text-6xl mb-3 opacity-40">remove_shopping_cart</span>
+                            <p class="font-bold text-gray-600 dark:text-gray-300">Keranjang Masih Kosong</p>
+                        </div>
+                    `;
+                    checkoutWaBtn.disabled = true;
+                    checkoutWaBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    checkoutWaBtn.disabled = false;
+                    checkoutWaBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                    cartItemsContainer.innerHTML = cart.map(item => `
+                        <div class="flex items-center gap-4 bg-gray-50 dark:bg-[#1d1616] p-3 rounded-2xl border border-gray-100 dark:border-[#3d2a26]">
+                            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-xl object-cover">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm text-gray-900 dark:text-white truncate">${item.name}</h4>
+                                <p class="text-xs font-extrabold text-primary mt-0.5">${formatRupiah(item.price)}</p>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <button onclick="changeQty('${item.id}', -1)" class="w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs font-bold">-</button>
+                                    <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
+                                    <button onclick="changeQty('${item.id}', 1)" class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">+</button>
+                                </div>
+                            </div>
+                            <button onclick="removeItem('${item.id}')" class="text-gray-400 hover:text-red-500 p-1">
+                                <span class="material-symbols-outlined text-xl">delete</span>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Checkout ke WhatsApp
+            checkoutWaBtn.addEventListener('click', () => {
+                if (cart.length === 0) return;
+
+                const note = deliveryNoteInput.value.trim();
+                let itemDetails = cart.map((item, idx) => `${idx + 1}. *${item.name}* (${item.qty}x) = ${formatRupiah(item.price * item.qty)}`).join('\n');
+                const grandTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+                let message = `Halo *PepsFood Dimsum*, saya ingin memesan:\n\n${itemDetails}\n\n`;
+                message += `==========================\n`;
+                message += `*Total Pesanan:* ${formatRupiah(grandTotal)}\n`;
+                if (note) message += `*Catatan/Alamat:* ${note}\n`;
+                message += `==========================\n\nMohon diproses. Terima kasih!`;
+
+                window.open(`https://wa.me/${phoneNum}?text=${encodeURIComponent(message)}`, '_blank');
+            });
+
+            updateCartUI();
+        });
+    </script>
+</body>
+</html>
