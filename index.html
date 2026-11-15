@@ -860,10 +860,10 @@
                 const grandTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
                 let message = `Halo *PepsFood Dimsum*, saya ingin memesan:\n\n${itemDetails}\n\n`;
-                message += `==========================\n`;
+                message += `=========================\n`;
                 message += `*Total Pesanan:* ${formatRupiah(grandTotal)}\n`;
                 if (note) message += `*Catatan/Alamat:* ${note}\n`;
-                message += `==========================\n\nMohon diproses. Terima kasih!`;
+                message += `=========================\n\nMohon diproses. Terima kasih!`;
 
                 window.open(`https://wa.me/${phoneNum}?text=${encodeURIComponent(message)}`, '_blank');
             });
